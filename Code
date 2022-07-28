@@ -1,0 +1,27 @@
+proc import out=new_data
+    datafile="'/home/u61453818/Flow(N).csv'" #Data
+    dbms=csv
+    replace;
+    getnames=YES;
+run;
+
+proc arima data=new_data;
+  /*--- Look at the input process ----------------------------*/
+identify var=Inflow(7);
+run;
+   /*--- Fit a model for the input ----------------------------*/
+
+estimate p=(1 2) (7) q=(1 2 3 4) (7);
+run;
+
+   /*--- Cross-correlation of prewhitened series ---------------*/
+   identify var=PlantTotalFlow(7) crosscorr=(Inflow(7)) nlag=6;
+   run;
+
+   /*--- Fit a simple transfer function - look at residuals ---*/
+   estimate input=(0 $ (1)/(1) Inflow );
+   run;
+  /*--- Final Model - look at residuals ----------------------*/
+   estimate p=(1) input=(0$(1)/(1)Inflow) printall altparm method=ml;
+   run;
+   quit;
